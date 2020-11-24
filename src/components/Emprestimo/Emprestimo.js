@@ -19,24 +19,25 @@ export default class Financiar extends Component {
 
   componentDidMount() {
     M.AutoInit();
-    const simulacaoFinanciamento = this.props;
-    this.setState({ simulacaoFinanciamento });
   }
 
   componentDidUpdate() {
     const { temFinanciamento } = this.props;
     const { financiamentoValido } = this.state;
-
     // previne erro "Maximum update depth exceeded.""
     if (temFinanciamento !== financiamentoValido) {
-      this.setState({ financiamentoValido: temFinanciamento });
+      this.setState({
+        financiamentoValido: temFinanciamento,
+        valorFinanciado: "",
+        taxaJuros: "",
+        parcelas: "",
+      });
     }
   }
 
   handleButtonSimularEmprestimo = () => {
     const { salarioLiquido } = this.props; // busca o salario informado
     const { valorFinanciado, taxaJuros, parcelas } = this.state;
-    //let { simulacaoFinanciamento } = this.state;
 
     if (valorFinanciado && taxaJuros && parcelas) {
       const valorMaximoParcela = salarioLiquido * 0.3; // Valor maximo da parcela menos 30%
@@ -115,12 +116,8 @@ export default class Financiar extends Component {
   };
 
   render() {
-    const {
-      temFinanciamento,
-      valorFinanciado,
-      taxaJuros,
-      parcelas,
-    } = this.props;
+    const { temFinanciamento } = this.props;
+    const { valorFinanciado, taxaJuros, parcelas } = this.state;
     return (
       <>
         <div className="row">
@@ -130,7 +127,7 @@ export default class Financiar extends Component {
               value={valorFinanciado}
               type="text"
               className="validate"
-              onInput={this.handleValorFinanciadoChange}
+              onChange={this.handleValorFinanciadoChange}
               required
               disabled={temFinanciamento}
             />
@@ -142,7 +139,7 @@ export default class Financiar extends Component {
               value={taxaJuros}
               type="text"
               className="validate"
-              onInput={this.handleTaxaJurosChange}
+              onChange={this.handleTaxaJurosChange}
               required
               disabled={temFinanciamento}
             />
@@ -154,7 +151,7 @@ export default class Financiar extends Component {
               value={parcelas}
               type="number"
               className="validate"
-              onInput={this.handleNumeroParcelaChange}
+              onChange={this.handleNumeroParcelaChange}
               min="1"
               step="1"
               required

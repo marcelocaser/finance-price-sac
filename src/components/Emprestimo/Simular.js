@@ -30,6 +30,7 @@ export default class Simular extends Component {
     const { simulacaoFinanciamento } = this.props;
     const {
       financiarPrice,
+      // financiarSac,
       totalPagoPrice,
       totalJurosPrice,
       listaSac,
