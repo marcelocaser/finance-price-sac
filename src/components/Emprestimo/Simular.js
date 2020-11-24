@@ -3,16 +3,30 @@ import React, { Component } from "react";
 import { formataMascara } from "../../helpers/financiarController";
 
 export default class Simular extends Component {
+  constructor() {
+    super();
+
+    this.state = { emprestimoContratado: false, emprestimoSelecionado: false };
+  }
   componentDidMount() {
     M.AutoInit();
   }
 
-  handleButtonContratarEmprestimo = () => {
-    const emprestimoContratado = true;
+  handleClickContratarEmprestimo = () => {
+    const { emprestimoContratado } = this.state;
     this.props.onClickContratarEmprestimo(emprestimoContratado);
   };
 
+  handleChangeTipoEmprestimo = (event) => {
+    const emprestimoContratado = event.target.value;
+    this.setState({
+      emprestimoContratado,
+      emprestimoSelecionado: true,
+    });
+  };
+
   render() {
+    const { emprestimoSelecionado } = this.state;
     const { simulacaoFinanciamento } = this.props;
     const {
       financiarPrice,
@@ -26,9 +40,19 @@ export default class Simular extends Component {
     return (
       <>
         <ul className="expandable collapsible">
-          <li className="active">
+          <li>
             <div className="collapsible-header">
               <i className="material-icons">monetization_on</i>Simulação PRICE
+              <label style={{ paddingLeft: "72%" }}>
+                <input
+                  value="PRICE"
+                  className="with-gap"
+                  name="tipoEmprestimo"
+                  type="radio"
+                  onChange={this.handleChangeTipoEmprestimo}
+                />
+                <span>Price</span>
+              </label>
             </div>
             <div className="collapsible-body">
               <table className="striped">
@@ -87,6 +111,16 @@ export default class Simular extends Component {
           <li>
             <div className="collapsible-header">
               <i className="material-icons">timeline</i>Simulação SAC
+              <label style={{ paddingLeft: "73%" }}>
+                <input
+                  value="SAC"
+                  className="with-gap"
+                  name="tipoEmprestimo"
+                  type="radio"
+                  onChange={this.handleChangeTipoEmprestimo}
+                />
+                <span>SAC</span>
+              </label>
             </div>
             <div className="collapsible-body">
               <table className="striped">
@@ -141,7 +175,8 @@ export default class Simular extends Component {
           <div className="col s6">
             <button
               className="btn waves-effect waves-light"
-              onClick={this.handleButtonContratarEmprestimo}
+              disabled={!emprestimoSelecionado}
+              onClick={this.handleClickContratarEmprestimo}
             >
               Contratar Empréstimo
               <i className="material-icons right">check</i>

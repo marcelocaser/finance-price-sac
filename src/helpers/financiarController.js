@@ -62,12 +62,16 @@ class financiar {
     return this.pmt[0];
   }
 
-  financiarSac() {
+  financiarSac(valorMaximoParcela) {
     /* Aplicamos a fórmula de financiamento com base na tabela SAC */
     this.calculaAmortizacao();
     for (let y = 0; y < this.n; y++) {
       const juros = this.i * (this.vP - y * this.a);
       let prestacao = this.a + juros;
+      if (prestacao > valorMaximoParcela) {
+        this.pmt = [];
+        return 0;
+      }
       this.pmt.push(prestacao);
       this.listaSacText +=
         y + 1 + ". prestação: " + formataMascara("BRL", prestacao) + "\n\r";
@@ -82,6 +86,7 @@ class financiar {
       });
     }
     this.calculaSaldoDevedorSAC();
+    return this.pmt[0];
   }
 
   calculaTotalPagoPrice() {
@@ -162,7 +167,6 @@ class financiar {
             : saldoDevedor - prestacao + saldoDevedor * this.i,
       });
     }
-    console.log(this.listaPrice);
   }
 
   buscaSaldoDevedorAnterior(numeroPrestacao) {

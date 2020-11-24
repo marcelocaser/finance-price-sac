@@ -7,19 +7,20 @@ export default class Financiar extends Component {
     super();
 
     this.state = {
-      valorFinanciado: 0,
-      taxaJuros: 0,
-      parcelas: 0,
-      financiarPrice: 0,
-      listaSac: [],
-      listaPrice: [],
+      valorFinanciado: "",
+      taxaJuros: "",
+      parcelas: "",
+      //financiarPrice: "",
+      //listaSac: [],
+      //listaPrice: [],
       //financiamentoValido: false,
     };
   }
 
   componentDidMount() {
     M.AutoInit();
-    //this.setState({ financiamentoValido });
+    const simulacaoFinanciamento = this.props;
+    this.setState({ simulacaoFinanciamento });
   }
 
   componentDidUpdate() {
@@ -35,6 +36,7 @@ export default class Financiar extends Component {
   handleButtonSimularEmprestimo = () => {
     const { salarioLiquido } = this.props; // busca o salario informado
     const { valorFinanciado, taxaJuros, parcelas } = this.state;
+    //let { simulacaoFinanciamento } = this.state;
 
     if (valorFinanciado && taxaJuros && parcelas) {
       const valorMaximoParcela = salarioLiquido * 0.3; // Valor maximo da parcela menos 30%
@@ -48,17 +50,20 @@ export default class Financiar extends Component {
       let simuladorB = new financiar(valorFinanciado, taxaJuros, parcelas);
       simuladorB.tratarMascaraReal(); /* Remove a máscara de R$ */
       simuladorB.formataDados(); /* Faz as conversões para Int e Float */
-      simuladorB.financiarSac(); /* Faz a simulação Sac e constrói a lista de prestações */
+      const financiarSac = simuladorB.financiarSac(
+        valorMaximoParcela
+      ); /* Faz a simulação Sac e constrói a lista de prestações */
       const listaSac = simuladorB.listaSac;
       const totalPagoSac = simuladorB.calculaTotalPagoSac();
       const totalJurosSac = simuladorB.calculaTotalJurosSac();
-      const financiamentoValido = financiarPrice > 0;
+      const financiamentoValido = financiarPrice > 0 && financiarSac > 0;
       const simulacaoFinanciamento = {
         listaSac,
         listaPrice,
         totalPagoSac,
         totalJurosSac,
         financiarPrice,
+        financiarSac,
         totalJurosPrice,
         totalPagoPrice,
         financiamentoValido,
@@ -88,47 +93,72 @@ export default class Financiar extends Component {
     });
   };
 
-  handleButtonClear = () => {
-    this.props.onClickLimpar();
+  handleClickLimpar = () => {
+    const simulacaoFinanciamento = {
+      listaSac: [],
+      listaPrice: [],
+      totalPagoSac: 0,
+      totalJurosSac: 0,
+      financiarPrice: 0,
+      financiarSac: 0,
+      totalJurosPrice: 0,
+      totalPagoPrice: 0,
+      financiamentoValido: false,
+    };
+    this.setState({
+      valorFinanciado: "",
+      taxaJuros: "",
+      parcelas: "",
+    });
+    this.props.onClickSimularEmprestimo(simulacaoFinanciamento);
+    this.props.onClickLimpar(simulacaoFinanciamento);
   };
 
   render() {
-    const { financiamentoValido } = this.state;
+    const {
+      temFinanciamento,
+      valorFinanciado,
+      taxaJuros,
+      parcelas,
+    } = this.props;
     return (
       <>
         <div className="row">
           <div className="input-field col s4">
             <input
               id="valor"
+              value={valorFinanciado}
               type="text"
               className="validate"
               onInput={this.handleValorFinanciadoChange}
               required
-              disabled={financiamentoValido}
+              disabled={temFinanciamento}
             />
             <label htmlFor="valor">Valor Financiado:</label>
           </div>
           <div className="input-field col s4">
             <input
               id="taxa"
+              value={taxaJuros}
               type="text"
               className="validate"
               onInput={this.handleTaxaJurosChange}
               required
-              disabled={financiamentoValido}
+              disabled={temFinanciamento}
             />
             <label htmlFor="taxa">Taxa de Juros(%) ao mês:</label>
           </div>
           <div className="input-field col s4">
             <input
               id="parcelas"
+              value={parcelas}
               type="number"
               className="validate"
               onInput={this.handleNumeroParcelaChange}
               min="1"
               step="1"
               required
-              disabled={financiamentoValido}
+              disabled={temFinanciamento}
             />
             <label htmlFor="parcelas">N&ordm; Parcelas ( em meses ):</label>
           </div>
@@ -138,17 +168,17 @@ export default class Financiar extends Component {
             <button
               className="btn waves-effect waves-light"
               onClick={this.handleButtonSimularEmprestimo}
-              disabled={financiamentoValido}
+              disabled={temFinanciamento}
             >
               Simular Empréstimo
               <i className="material-icons right">attach_money</i>
             </button>
           </div>
-          <div className="col s6" style={{ textAlign: "right" }}>
+          <div className="col s6 right-align">
             <button
               className="btn waves-effect waves-light red"
               type="reset"
-              onClick={this.handleButtonClear}
+              onClick={this.handleClickLimpar}
             >
               Limpar
               <i className="material-icons right">delete</i>

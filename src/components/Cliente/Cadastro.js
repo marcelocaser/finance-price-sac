@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import Emprestimo from "../Emprestimo/Emprestimo";
 import Simular from "../Emprestimo/Simular";
 import ListaClientes from "./ListaClientes";
+import moment from "moment";
 
 const SITUACAO = {
   PENSIONISTA: "Pensionista",
@@ -15,18 +16,24 @@ export default class Cadastro extends Component {
   constructor() {
     super();
 
-    this.nomeInput = React.createRef();
-    this.focusNomeInput = this.focusNomeInput.bind(this);
+    this.cpfInput = React.createRef();
+    this.focusCpfInput = this.focusCpfInput.bind(this);
 
     this.state = {
+      cpf: "",
+      nome: "",
+      sobrenome: "",
+      salario: "",
+      situacao: "",
       financiamentoValido: false,
       emprestimoContratado: false,
+      simulacaoFinanciamento: {},
       listaClientes: [],
     };
   }
 
-  focusNomeInput() {
-    this.nomeInput.current.focus();
+  focusCpfInput() {
+    this.cpfInput.current.focus();
   }
 
   componentDidUpdate() {
@@ -46,6 +53,7 @@ export default class Cadastro extends Component {
   handleCPFChange = (event) => {
     const cpf = event.target.value;
     this.setState({ cpf });
+    this.buscaCliente(cpf);
   };
 
   handleSalarioChange = (event) => {
@@ -59,10 +67,17 @@ export default class Cadastro extends Component {
   };
 
   handleFormSubmit = (event) => {
+    console.log("handleFormSubmit");
     event.preventDefault();
-    const { listaClientes, emprestimoContratado } = this.state;
-    const { nome, sobrenome, cpf, salario, situacao } = this.state;
-    if (emprestimoContratado) {
+    const {
+      listaClientes,
+      emprestimoContratado,
+      simulacaoFinanciamento,
+    } = this.state;
+    const { nome, sobrenome, cpf, salario, situacao, financiamentoValido } = this.state;
+    console.log(simulacaoFinanciamento);
+    console.log(emprestimoContratado);
+    if (financiamentoValido) {
       const cliente = {
         id: uuidv4(),
         nome,
@@ -70,59 +85,66 @@ export default class Cadastro extends Component {
         cpf,
         salario,
         situacao,
-      };
-      listaClientes.push(cliente);
-      this.setState({ listaClientes });
-      this.setState({
-        id: "",
-        nome: "",
-        cpf: "",
-        salario: "",
-        situacao: "",
-        outrosEmprestimos: [
+        emprestimos: [
           {
-            mesAno: "",
-            valorEmprestimoMes: 0,
+            mesAno: moment().format("MM/yyyy"),
+            valorEmprestimoMes:
+              emprestimoContratado === "PRICE"
+                ? simulacaoFinanciamento.totalPagoPrice
+                : simulacaoFinanciamento.totalPagoSac,
+            tipo: emprestimoContratado,
+            detalhes:
+              emprestimoContratado === "PRICE"
+                ? simulacaoFinanciamento.listaPrice
+                : simulacaoFinanciamento.listaSac,
           },
         ],
-      });
-      event.target.reset();
-      this.setState({
-        simulacaoFinanciamento: {
-          listaSac: [],
-          totalPagoSac: 0,
-          totalJurosSac: 0,
-          financiarPrice: 0,
-          totalJurosPrice: 0,
-          totalPagoPrice: 0,
-        },
-      });
-      this.setState({ financiamentoValido: false });
-      this.setState({ emprestimoContratado: false });
+      };
+      listaClientes.push(cliente);
+      console.log(listaClientes);
+      this.setState({ listaClientes });
     }
-    this.focusNomeInput();
-  };
-
-  handleClickSimularEmprestimo = (simulacaoFinanciamento) => {
-    const { financiamentoValido } = simulacaoFinanciamento;
-    this.setState({ financiamentoValido });
-    this.setState({ simulacaoFinanciamento });
-    if (!financiamentoValido) {
-      M.toast({ html: "Valor solicitado não pode ser liberado!!" });
-    }
-    this.focusNomeInput();
-  };
-
-  handleClickContratarEmprestimo = (emprestimoContratado) => {
-    this.setState({ emprestimoContratado });
-  };
-
-  handleClickLimpar = () => {
-    this.focusNomeInput();
     this.setState({
       id: "",
       nome: "",
+      sobrenome: "",
       cpf: "",
+      salario: "",
+      situacao: "",
+      emprestimos: [
+        {
+          mesAno: "",
+          valorEmprestimoMes: 0,
+        },
+      ],
+    });
+    event.target.reset();
+    this.focusCpfInput();
+  };
+
+  handleClickSimularEmprestimo = (financiamentoSimulado) => {
+    const { financiamentoValido, listaSac } = financiamentoSimulado;
+    this.setState({ financiamentoValido });
+    this.setState({ simulacaoFinanciamento: financiamentoSimulado });
+    if (!financiamentoValido && listaSac.length === 0) {
+      M.toast({ html: "Valor solicitado não pode ser liberado!!" });
+    }
+    this.focusCpfInput();
+  };
+
+  handleClickContratarEmprestimo = (emprestimoContratado) => {
+    console.log("handleClickContratarEmprestimo");
+    console.log(emprestimoContratado);
+    this.setState({ emprestimoContratado });
+  };
+
+  handleClickLimpar = (financiamentoSimulado) => {
+    this.setState({ simulacaoFinanciamento: financiamentoSimulado });
+    this.setState({
+      id: "",
+      cpf: "",
+      nome: "",
+      sobrenome: "",
       salario: "",
       situacao: "",
       outrosEmprestimos: [
@@ -132,27 +154,46 @@ export default class Cadastro extends Component {
         },
       ],
     });
-    this.setState({
-      simulacaoFinanciamento: {
-        listaSac: [],
-        listaPrice: [],
-        totalPagoSac: 0,
-        totalJurosSac: 0,
-        financiarPrice: 0,
-        totalJurosPrice: 0,
-        totalPagoPrice: 0,
-      },
-    });
     this.setState({ financiamentoValido: false });
     this.setState({ emprestimoContratado: false });
+    this.focusCpfInput();
   };
+
+  buscaCliente(cpf) {
+    const { listaClientes } = this.state;
+    const existeCliente = listaClientes.find((cliente) => {
+      return cliente.cpf === cpf;
+    });
+    if (existeCliente) {
+      const { nome, sobrenome, salario, situacao, cpf } = existeCliente;
+      this.setState({
+        cpf,
+        nome,
+        sobrenome,
+        situacao,
+        salario,
+      });
+    } else {
+      this.setState({
+        cpf,
+        nome: "",
+        sobrenome: "",
+        situacao: "",
+        salario: "",
+      });
+    }
+  }
 
   render() {
     const {
-      salario,
       simulacaoFinanciamento,
       financiamentoValido,
       listaClientes,
+      cpf,
+      nome,
+      sobrenome,
+      salario,
+      situacao,
     } = this.state;
     return (
       <div className="container">
@@ -164,47 +205,51 @@ export default class Cadastro extends Component {
           <div className="row">
             <div className="input-field col s6">
               <input
-                id="nome"
+                id="cpf"
                 type="text"
-                ref={this.nomeInput}
+                value={cpf}
+                ref={this.cpfInput}
                 className="validate"
-                onInput={this.handleNomeChange}
+                onChange={this.handleCPFChange}
                 required
                 autoFocus
                 disabled={financiamentoValido}
               />
-              <label htmlFor="nome">Nome</label>
+              <label htmlFor="cpf">CPF</label>
             </div>
             <div className="input-field col s6">
               <input
-                id="sobrenome"
+                id="nome"
+                value={nome}
                 type="text"
                 className="validate"
-                onInput={this.handleSobrenomeChange}
+                onChange={this.handleNomeChange}
                 required
                 disabled={financiamentoValido}
               />
-              <label htmlFor="sobrenome">Sobrenome</label>
+              <label htmlFor="nome">Nome</label>
             </div>
           </div>
           <div className="row">
             <div className="input-field col s4">
               <input
-                id="cpf"
+                id="sobrenome"
+                value={sobrenome}
                 type="text"
                 className="validate"
-                onInput={this.handleCPFChange}
+                onChange={this.handleSobrenomeChange}
                 required
                 disabled={financiamentoValido}
               />
-              <label htmlFor="cpf">CPF</label>
+              <label htmlFor="sobrenome">Sobrenome</label>
             </div>
             <div className="input-field col s4">
               <input
                 id="salario"
+                value={salario}
                 type="number"
                 className="validate"
-                onInput={this.handleSalarioChange}
+                onChange={this.handleSalarioChange}
                 required
                 disabled={financiamentoValido}
               />
@@ -219,6 +264,7 @@ export default class Cadastro extends Component {
             <div className="input-field col s4">
               {
                 <select
+                  value={situacao}
                   required
                   onChange={this.handleSituacaoChange}
                   disabled={financiamentoValido}
