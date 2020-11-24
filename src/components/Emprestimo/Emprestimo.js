@@ -36,19 +36,26 @@ export default class Financiar extends Component {
   }
 
   handleButtonSimularEmprestimo = () => {
-    const { salarioLiquido } = this.props; // busca o salario informado
+    const { salarioLiquido, temEmprestimos } = this.props; // busca o salario informado e se tem outros emprestimos
     const { valorFinanciado, taxaJuros, parcelas } = this.state;
-
+    let totalEmprestimosContratados = 0;
+    if (temEmprestimos) {
+      totalEmprestimosContratados = temEmprestimos.reduce((acc, cur) => {
+        return acc + cur.valorEmprestimoMes;
+      }, 0);
+    }
+    console.log(totalEmprestimosContratados);
     if (valorFinanciado && taxaJuros && parcelas) {
       const valorMaximoParcela = salarioLiquido * 0.3; // Valor maximo da parcela menos 30%
-      let simuladorA = new financiar(valorFinanciado, taxaJuros, parcelas);
+      const valorSolicitadoMaisContratado = Number(valorFinanciado) + Number(totalEmprestimosContratados);
+      let simuladorA = new financiar(String(valorSolicitadoMaisContratado), taxaJuros, parcelas);
       simuladorA.tratarMascaraReal(); /* Remove a máscara de R$ */
       simuladorA.formataDados(); /* Faz as conversões para Int e Float */
       const financiarPrice = simuladorA.financiarPrice(valorMaximoParcela);
       const totalJurosPrice = simuladorA.calculaTotalJurosPrice();
       const totalPagoPrice = simuladorA.calculaTotalPagoPrice();
       const listaPrice = simuladorA.listaPrice;
-      let simuladorB = new financiar(valorFinanciado, taxaJuros, parcelas);
+      let simuladorB = new financiar(String(valorSolicitadoMaisContratado), taxaJuros, parcelas);
       simuladorB.tratarMascaraReal(); /* Remove a máscara de R$ */
       simuladorB.formataDados(); /* Faz as conversões para Int e Float */
       const financiarSac = simuladorB.financiarSac(

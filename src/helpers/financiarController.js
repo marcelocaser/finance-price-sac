@@ -143,7 +143,6 @@ class financiar {
   }
 
   calculaJurosPrice(prestacao, valorFinanciamento) {
-    // marcelo
     this.listaPrice.push({
       numeroPrestacao: 1,
       valorPrestacao: prestacao,

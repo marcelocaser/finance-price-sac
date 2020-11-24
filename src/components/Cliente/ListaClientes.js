@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { formataMascara } from "../../helpers/financiarController";
 
 export default class ListaClientes extends Component {
   render() {
@@ -14,20 +15,37 @@ export default class ListaClientes extends Component {
                 <th>CPF</th>
                 <th>Salário</th>
                 <th>Situação</th>
+                <th>Emprestimos</th>
               </tr>
             </thead>
 
             <tbody>
               {clientes.map(
-                ({ id, nome, sobrenome, cpf, salario, situacao }) => {
+                ({
+                  id,
+                  nome,
+                  sobrenome,
+                  cpf,
+                  salario,
+                  situacao,
+                  emprestimos,
+                }) => {
                   return (
                     <tr key={id}>
                       <td>
                         {nome} {sobrenome}
                       </td>
                       <td>{cpf}</td>
-                      <td>{salario}</td>
+                      <td>{formataMascara("BRL", salario)}</td>
                       <td>{situacao}</td>
+                      <td>
+                        {formataMascara(
+                          "BRL",
+                          emprestimos.reduce((acc, cur) => {
+                            return acc + cur.valorEmprestimoMes;
+                          }, 0)
+                        )}
+                      </td>
                     </tr>
                   );
                 }

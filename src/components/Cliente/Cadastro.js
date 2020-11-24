@@ -73,46 +73,7 @@ export default class Cadastro extends Component {
 
   handleFormSubmit = (event) => {
     event.preventDefault();
-    const {
-      listaClientes,
-      emprestimoContratado,
-      simulacaoFinanciamento,
-      nome,
-      sobrenome,
-      cpf,
-      salario,
-      situacao,
-      financiamentoValido
-    } = this.state;
-    if (financiamentoValido) {
-      const cliente = {
-        id: uuidv4(),
-        nome,
-        sobrenome,
-        cpf,
-        salario,
-        situacao,
-        emprestimos: [
-          {
-            mesAno: moment().format("MM/yyyy"),
-            valorEmprestimoMes:
-              emprestimoContratado === "PRICE"
-                ? simulacaoFinanciamento.totalPagoPrice
-                : simulacaoFinanciamento.totalPagoSac,
-            tipo: emprestimoContratado,
-            detalhes:
-              emprestimoContratado === "PRICE"
-                ? simulacaoFinanciamento.listaPrice
-                : simulacaoFinanciamento.listaSac,
-          },
-        ],
-      };
-      listaClientes.push(cliente);
-      this.setState({ listaClientes });
-      this.reset();
-    }
-   /* event.target.reset();
-    this.focusCpfInput();*/
+    this.incluirAlterarCliente();
   };
 
   handleClickSimularEmprestimo = (financiamentoSimulado) => {
@@ -135,22 +96,103 @@ export default class Cadastro extends Component {
       return cliente.cpf === cpf;
     });
     if (existeCliente) {
-      const { nome, sobrenome, salario, situacao, cpf } = existeCliente;
+      const {
+        nome,
+        sobrenome,
+        salario,
+        situacao,
+        emprestimos,
+        id,
+      } = existeCliente;
       this.setState({
+        id,
         cpf,
         nome,
         sobrenome,
         situacao,
         salario,
+        emprestimos,
       });
     } else {
       this.setState({
+        id: "",
         cpf,
         nome: "",
         sobrenome: "",
         situacao: "",
         salario: "",
+        emprestimos: [
+          {
+            mesAno: "",
+            valorEmprestimoMes: "",
+            tipo: "",
+            detalhes: [],
+          },
+        ],
       });
+    }
+  }
+
+  incluirAlterarCliente() {
+    const {
+      listaClientes,
+      emprestimoContratado,
+      simulacaoFinanciamento,
+      id,
+      nome,
+      sobrenome,
+      cpf,
+      salario,
+      situacao,
+      financiamentoValido,
+    } = this.state;
+    if (financiamentoValido) {
+      if (!id) {
+        // adiciona registro
+        console.log("incluindo registro...");
+        const cliente = {
+          id: uuidv4(),
+          nome,
+          sobrenome,
+          cpf,
+          salario: Number.parseFloat(salario),
+          situacao,
+          emprestimos: [
+            {
+              mesAno: moment().format("MM/yyyy"),
+              valorEmprestimoMes:
+                emprestimoContratado === "PRICE"
+                  ? simulacaoFinanciamento.totalPagoPrice
+                  : simulacaoFinanciamento.totalPagoSac,
+              tipo: emprestimoContratado,
+              detalhes:
+                emprestimoContratado === "PRICE"
+                  ? simulacaoFinanciamento.listaPrice
+                  : simulacaoFinanciamento.listaSac,
+            },
+          ],
+        };
+        listaClientes.push(cliente);
+      } else {
+        // altera registro
+        console.log("alterando registro...");
+        const index = listaClientes.findIndex((cliente) => cliente.id === id);
+        const { emprestimos } = listaClientes[index];
+        emprestimos.push({
+          mesAno: moment().format("MM/yyyy"),
+          valorEmprestimoMes:
+            emprestimoContratado === "PRICE"
+              ? simulacaoFinanciamento.totalPagoPrice
+              : simulacaoFinanciamento.totalPagoSac,
+          tipo: emprestimoContratado,
+          detalhes:
+            emprestimoContratado === "PRICE"
+              ? simulacaoFinanciamento.listaPrice
+              : simulacaoFinanciamento.listaSac,
+        });
+      }
+      this.setState({ listaClientes });
+      this.reset();
     }
   }
 
@@ -162,12 +204,7 @@ export default class Cadastro extends Component {
       sobrenome: "",
       salario: "",
       situacao: "",
-      outrosEmprestimos: [
-        {
-          mesAno: "",
-          valorEmprestimoMes: 0,
-        },
-      ],
+      emprestimos: [],
     });
     this.setState({ financiamentoValido: false });
     this.setState({ emprestimoContratado: false });
@@ -184,6 +221,7 @@ export default class Cadastro extends Component {
       sobrenome,
       salario,
       situacao,
+      emprestimos,
     } = this.state;
     return (
       <div className="container">
@@ -278,6 +316,7 @@ export default class Cadastro extends Component {
             onClickSimularEmprestimo={this.handleClickSimularEmprestimo}
             onClickLimpar={this.handleClickLimpar}
             salarioLiquido={salario}
+            temEmprestimos={emprestimos}
             temFinanciamento={financiamentoValido}
           />
           {financiamentoValido && (
