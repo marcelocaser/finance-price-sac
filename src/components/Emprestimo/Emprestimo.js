@@ -10,10 +10,6 @@ export default class Financiar extends Component {
       valorFinanciado: "",
       taxaJuros: "",
       parcelas: "",
-      //financiarPrice: "",
-      //listaSac: [],
-      //listaPrice: [],
-      //financiamentoValido: false,
     };
   }
 
@@ -28,10 +24,14 @@ export default class Financiar extends Component {
     if (temFinanciamento !== financiamentoValido) {
       this.setState({
         financiamentoValido: temFinanciamento,
-        valorFinanciado: "",
-        taxaJuros: "",
-        parcelas: "",
       });
+      if (!temFinanciamento) {
+        this.setState({
+          valorFinanciado: "",
+          taxaJuros: "",
+          parcelas: "",
+        });
+      }
     }
   }
 
@@ -44,19 +44,27 @@ export default class Financiar extends Component {
         return acc + cur.valorEmprestimoMes;
       }, 0);
     }
-    console.log(totalEmprestimosContratados);
     if (valorFinanciado && taxaJuros && parcelas) {
       const valorMaximoParcela = salarioLiquido * 0.3; // Valor maximo da parcela menos 30%
-      const valorSolicitadoMaisContratado = Number(valorFinanciado) + Number(totalEmprestimosContratados);
-      let simuladorA = new financiar(String(valorSolicitadoMaisContratado), taxaJuros, parcelas);
-      simuladorA.tratarMascaraReal(); /* Remove a máscara de R$ */
+      const valorSolicitadoMaisContratado =
+        Number(valorFinanciado) + Number(totalEmprestimosContratados);
+      let simuladorA = new financiar(
+        String(valorSolicitadoMaisContratado),
+        taxaJuros,
+        parcelas
+      );
+      //simuladorA.tratarMascaraReal(); /* Remove a máscara de R$ */
       simuladorA.formataDados(); /* Faz as conversões para Int e Float */
       const financiarPrice = simuladorA.financiarPrice(valorMaximoParcela);
       const totalJurosPrice = simuladorA.calculaTotalJurosPrice();
       const totalPagoPrice = simuladorA.calculaTotalPagoPrice();
       const listaPrice = simuladorA.listaPrice;
-      let simuladorB = new financiar(String(valorSolicitadoMaisContratado), taxaJuros, parcelas);
-      simuladorB.tratarMascaraReal(); /* Remove a máscara de R$ */
+      let simuladorB = new financiar(
+        String(valorSolicitadoMaisContratado),
+        taxaJuros,
+        parcelas
+      );
+      //simuladorB.tratarMascaraReal(); /* Remove a máscara de R$ */
       simuladorB.formataDados(); /* Faz as conversões para Int e Float */
       const financiarSac = simuladorB.financiarSac(
         valorMaximoParcela
@@ -144,7 +152,7 @@ export default class Financiar extends Component {
             <input
               id="taxa"
               value={taxaJuros}
-              type="text"
+              type="number"
               className="validate"
               onChange={this.handleTaxaJurosChange}
               required
