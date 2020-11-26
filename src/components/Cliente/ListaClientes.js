@@ -22,7 +22,7 @@ export default class ListaClientes extends Component {
             <tbody>
               {clientes.map(
                 ({
-                  id,
+                  _id,
                   nome,
                   sobrenome,
                   cpf,
@@ -31,7 +31,7 @@ export default class ListaClientes extends Component {
                   emprestimos,
                 }) => {
                   return (
-                    <tr key={id}>
+                    <tr key={_id}>
                       <td>
                         {nome} {sobrenome}
                       </td>

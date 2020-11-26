@@ -1,10 +1,10 @@
 import M from "materialize-css";
 import React, { Component } from "react";
-import { v4 as uuidv4 } from "uuid";
 import Emprestimo from "../Emprestimo/Emprestimo";
 import Simular from "../Emprestimo/Simular";
 import ListaClientes from "./ListaClientes";
 import moment from "moment";
+import financeService from "../../services/financeService";
 
 const SITUACAO = {
   PENSIONISTA: "Pensionista",
@@ -39,6 +39,19 @@ export default class Cadastro extends Component {
   componentDidUpdate() {
     M.AutoInit();
   }
+
+  componentDidMount() {
+    this.allCLientes();
+  }
+
+  allCLientes = async () => {
+    try {
+      const res = await financeService.getClientes();
+      this.setState({ listaClientes: res.data });
+    } catch (error) {
+      M.toast({ html: error });
+    }
+  };
 
   handleNomeChange = (event) => {
     const nome = event.target.value;
@@ -102,10 +115,10 @@ export default class Cadastro extends Component {
         salario,
         situacao,
         emprestimos,
-        id,
+        _id,
       } = existeCliente;
       this.setState({
-        id,
+        _id,
         cpf,
         nome,
         sobrenome,
@@ -115,7 +128,7 @@ export default class Cadastro extends Component {
       });
     } else {
       this.setState({
-        id: "",
+        _id: "",
         cpf,
         nome: "",
         sobrenome: "",
@@ -133,12 +146,11 @@ export default class Cadastro extends Component {
     }
   }
 
-  incluirAlterarCliente() {
+  async incluirAlterarCliente() {
     const {
-      listaClientes,
       emprestimoContratado,
       simulacaoFinanciamento,
-      id,
+      _id,
       nome,
       sobrenome,
       cpf,
@@ -147,11 +159,10 @@ export default class Cadastro extends Component {
       financiamentoValido,
     } = this.state;
     if (financiamentoValido) {
-      if (!id) {
+      //const id = _id;
+      if (!_id) {
         // adiciona registro
-        console.log("incluindo registro...");
-        const cliente = {
-          id: uuidv4(),
+        let cliente = {
           nome,
           sobrenome,
           cpf,
@@ -172,12 +183,15 @@ export default class Cadastro extends Component {
             },
           ],
         };
-        listaClientes.push(cliente);
+        try {
+          await financeService.saveCliente(cliente);
+          this.allCLientes();
+        } catch (error) {
+          M.toast({ html: error });
+        }
       } else {
         // altera registro
-        console.log("alterando registro...");
-        const index = listaClientes.findIndex((cliente) => cliente.id === id);
-        const { emprestimos } = listaClientes[index];
+        let emprestimos = [];
         emprestimos.push({
           mesAno: moment().format("MM/yyyy"),
           valorEmprestimoMes:
@@ -190,8 +204,14 @@ export default class Cadastro extends Component {
               ? simulacaoFinanciamento.listaPrice
               : simulacaoFinanciamento.listaSac,
         });
+        try {
+          await financeService.saveClienteEmprestimo(_id, emprestimos);
+          this.allCLientes();
+        } catch (error) {
+          M.toast({ html: error });
+        }
       }
-      this.setState({ listaClientes });
+      //this.setState({ listaClientes });
       this.reset();
     }
   }
